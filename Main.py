@@ -1,14 +1,13 @@
 # Global imports
 from dotenv import load_dotenv
-import asyncio
 import discord
 import json
 import os
 
-# Local imports
+# Local file imports
+from Functions import FunctionModeration as ModerationSystem
 from Functions import FunctionCounting as CountingSystem
 from Functions import FunctionCommands as CommandSystem
-
 
 # load in the .env file
 load_dotenv()
@@ -30,13 +29,13 @@ Client = discord.Client(intents = intents)
 CommandPrefix = ">>"
 EnableHelpCommand = True
 EnableVerboseLogging = True
-LoggingChannelID = 0000000000000000
+LoggingChannelID = 1367403105930580038
     # MODERATION FUNCTIONS
-RoleOnJoinID = 0000000000000000
+RoleOnJoinID = 1366230527375577149
 NumberOfMessagesUntilMember = 1
-MemberRoleID = 0000000000000000
+MemberRoleID = 1366230433230229554
 NumberOfMessagesUntilVerification = 20
-VerifiedRoleID = 0000000000000000
+VerifiedRoleID = 1366230321938567269
     # COUNTING FUNCTIONS
 SuccessfulCountsUntilSave = 20
 MaxNumberOfSaves = 5
@@ -50,35 +49,26 @@ async def on_ready():
     print(f"\033[34mDISCORD_BOT_INFO:\033[0m Logged in as: {Client.user}")
 
 @Client.event
-async def on_message(RawMessage):
+async def on_message(DiscordMessage):
     # Message cleanup code
-    ContentCheck = RawMessage.content.strip().lower().replace("'", "")
-    Message = RawMessage.content.strip("'", "")
+    ContentCheck = DiscordMessage.content.strip().lower().replace("'", "")
+    Message = DiscordMessage.content.strip("'", "")
 
-    # Checks for the prefix, if prefix found executes that code
-    if ContentCheck.startswith(CommandPrefix):
-        await CommandSystem(ContentCheck, Message)
+    # Check blacklist before moving forward
+    BlacklistedWord = ModerationSystem.BlacklistCheck(DiscordMessage, ContentCheck, LoggingChannelID, ModerationActionPreformed, Client, BlacklistedWord)
+    if BlacklistedWord == True:
         return
-    elif RawMessage.channel.id == COUNTING_CHANNEL_ID:
-        await CountingSystem(ContentCheck, RawMessage)
+    ModerationSystem.AutoRoleHierarchy()
+
+    if ContentCheck.startswith(CommandPrefix):
+        await CommandSystem(DiscordMessage, Message, ContentCheck)
+        return
+    elif DiscordMessage.channel.id == COUNTING_CHANNEL_ID:
+        await CountingSystem(DiscordMessage, Message, ContentCheck)
         return
     else:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        await ModerationSystem.ChannelActions(DiscordMessage, Message, ContentCheck)
+        return
+    
+# Run da bot
+Client.run(DISCORD_BOT_TOKEN)
