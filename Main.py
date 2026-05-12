@@ -40,7 +40,7 @@ VerifiedRoleID = 1366230321938567269
 SuccessfulCountsUntilSave = 20
 MaxNumberOfSaves = 5
     # MESSAGE REFERENCES
-ModerationActionPreformed = "Did I get it wrong? Tell me with !report <insert text here>"
+ModerationActionPreformed = 'Did I get it wrong? Tell me with "!report <insert text here>"'
 
 
 # I honestly don't know what this does but it's important
@@ -55,17 +55,20 @@ async def on_message(DiscordMessage):
     Message = DiscordMessage.content.strip("'", "")
 
     # Check blacklist before moving forward
-    BlacklistedWord = ModerationSystem.BlacklistCheck(DiscordMessage, ContentCheck, LoggingChannelID, ModerationActionPreformed, Client, BlacklistedWord)
-    if BlacklistedWord == True:
+    Blacklisted = ModerationSystem.BlacklistCheck(DiscordMessage, ContentCheck, LoggingChannelID, ModerationActionPreformed, Client, Blacklisted)
+    if Blacklisted == True:
         return
     ModerationSystem.AutoRoleHierarchy()
 
+    # Checks for Command prefix, if contains prefix proceeds to call function
     if ContentCheck.startswith(CommandPrefix):
         await CommandSystem(DiscordMessage, Message, ContentCheck)
         return
+    # Checks for the counting channel, if found calls that function
     elif DiscordMessage.channel.id == COUNTING_CHANNEL_ID:
         await CountingSystem(DiscordMessage, Message, ContentCheck)
         return
+    # Checks for specific channels, if none are found it quits
     else:
         await ModerationSystem.ChannelActions(DiscordMessage, Message, ContentCheck)
         return
